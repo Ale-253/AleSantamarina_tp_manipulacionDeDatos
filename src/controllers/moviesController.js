@@ -1,6 +1,6 @@
 const db = require('../database/models');
-const sequelize = db.sequelize;
 const moment = require('moment');
+const { validationResult } = require('express-validator');
 
 //Otra forma de llamar a los modelos
 const Movies = db.Movie;
@@ -47,20 +47,30 @@ const moviesController = {
     },
     create: function (req, res) {
         // TODO
-        const { title, rating, awards, release_date, length } = req.body
-        db.Movie.create({
-            title: title.trim(),
-            rating,
-            awards,
-            release_date,
-            length
-        })
-            .then(movie => {
-                console.log(movie);
-                return res.redirect('/movies')
-            })
-            .catch(error => console.log(error))
+        const errors = validationResult(req);
 
+        if (errors.isEmpty()) {
+
+            const { title, rating, awards, release_date, length } = req.body
+
+            db.Movie.create({
+                title: title.trim(),
+                rating,
+                awards,
+                release_date,
+                length
+            })
+                .then(movie => {
+                    console.log(movie);
+                    return res.redirect('/movies')
+                })
+                .catch(error => console.log(error))
+        } else {
+            return res.render('moviesAdd', {
+                errors: errors.mapped(),
+                old: req.body
+            })
+        }
     },
     edit: function (req, res) {
         // TODO
@@ -91,7 +101,7 @@ const moviesController = {
                 }
             })
             .then(response => {
-               return res.redirect('/movies/detail/' + req.params.id)
+                return res.redirect('/movies/detail/' + req.params.id)
             })
             .catch(error => console.log(error))
 
